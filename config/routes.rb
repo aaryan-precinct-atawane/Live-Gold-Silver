@@ -8,7 +8,4 @@ Rails.application.routes.draw do
 
   # Dashboard with the live gold and silver ticker.
   get "prices" => "prices#index", as: :prices
-
-  # Manage the manual price list the ticker cycles through.
-  resources :price_entries, only: %i[index create destroy]
 end

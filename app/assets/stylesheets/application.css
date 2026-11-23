@@ -189,3 +189,8 @@ h1 { margin: 0 0 1rem; font-size: 1.75rem; }
   .market__half + .market__half { border-left: 0; border-top: 1px solid var(--border); }
   .price__value { font-size: 1.7rem; }
 }
+
+/* ---- Live prices: unit label, risk note ---- */
+.market__header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.market__unit { font-size: 0.8rem; font-weight: 600; opacity: 0.75; }
+.risk-note { margin: 0.4rem 0 0; text-align: center; font-size: 0.8rem; color: var(--muted); }
