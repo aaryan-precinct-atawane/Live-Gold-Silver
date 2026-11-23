@@ -21,7 +21,8 @@ module GoldSilverNews
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # Show times in Indian Standard Time (the database still stores UTC).
+    config.time_zone = "Asia/Kolkata"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

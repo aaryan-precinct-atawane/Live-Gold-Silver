@@ -1,0 +1,42 @@
+<% content_for :title, "Live Prices · Gold & Silver News" %>
+<%# Refresh by "morphing": only changed parts of the page are updated. %>
+<%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+
+<div data-controller="auto-refresh" data-auto-refresh-interval-value="5000">
+  <h1>Live Prices</h1>
+
+  <div class="market">
+    <% PriceEntry::METALS.each do |metal| %>
+      <% quote = @latest[metal] %>
+      <section class="market__half market__half--<%= metal %>" id="card_<%= metal %>">
+        <header class="market__header">
+          <h2><%= metal.capitalize %></h2>
+        </header>
+
+        <div class="market__body">
+          <% if quote %>
+            <% previous = quote.previous %>
+            <p class="quote">
+              <span class="quote__label">INR</span>
+              <span class="price__value"><%= inr(quote.price_inr) %></span>
+              <%= price_change(quote.price_inr, previous&.price_inr) %>
+            </p>
+            <p class="quote quote--secondary">
+              <span class="quote__label">USD</span>
+              <span class="price__value"><%= usd(quote.price_usd) %></span>
+              <%= price_change(quote.price_usd, previous&.price_usd) %>
+            </p>
+          <% else %>
+            <p class="muted">No prices yet. <%= link_to "Add some", price_entries_path(metal: metal) %></p>
+          <% end %>
+
+          <%= link_to "Buy #{metal.capitalize}", prices_path, class: "button button--buy button--#{metal}" %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+
+  <% if @updated_at %>
+    <p class="updated muted">Updated <%= @updated_at.strftime("%d %b %Y, %H:%M:%S") %> IST</p>
+  <% end %>
+</div>

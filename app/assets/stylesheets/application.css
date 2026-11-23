@@ -1,10 +1,191 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+/* Gold & Silver News: simple hand-written styles, no framework. */
+
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #111827;          /* main text: near-black for strong contrast */
+  --muted: #5b6472;
+  --border: #dde2e9;
+  --navy: #0f1b2d;         /* header and primary buttons */
+  --navy-hover: #1c2d47;
+
+  --gold-dark: #8a6a10;    /* readable gold for text and borders */
+  --gold: #d4a937;
+  --gold-light: #f6e3a1;
+  --silver-dark: #4b5563;
+  --silver: #a7b0bb;
+  --silver-light: #eef1f5;
+
+  --up: #0f7a3d;
+  --up-bg: #e3f5ea;
+  --down: #b42318;
+  --down-bg: #fdeceb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+a { color: var(--navy); }
+h1 { margin: 0 0 1rem; font-size: 1.75rem; }
+.muted { color: var(--muted); }
+
+/* ---- Header ---- */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: var(--navy);
+}
+.site-header a { color: #e5e9f0; text-decoration: none; }
+.site-header nav a:hover { color: #fff; text-decoration: underline; }
+.site-header nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+.brand { font-weight: 800; letter-spacing: 0.01em; color: var(--gold-light) !important; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 1.75rem 1rem; }
+
+/* ---- Buttons ---- */
+.button {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--navy);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover { background: var(--navy-hover); }
+.button--large { padding: 0.8rem 1.5rem; font-size: 1.05rem; }
+.button--small { padding: 0.2rem 0.6rem; font-size: 0.85rem; background: var(--silver-dark); }
+
+.button--buy { display: block; width: 100%; margin-top: 1.25rem; text-align: center; }
+.button--gold { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); }
+.button--gold:hover { background: var(--gold-dark); }
+.button--silver { background: linear-gradient(135deg, #7b8694, var(--silver-dark)); }
+.button--silver:hover { background: var(--silver-dark); }
+
+/* ---- Homepage ---- */
+.hero {
+  padding: 2.5rem 1.5rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--navy) 0%, #1f3352 60%, #3b3420 100%);
+  color: #fff;
+  text-align: center;
+}
+.hero__eyebrow { margin: 0 0 0.5rem; color: var(--gold-light); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
+.hero__title { margin: 0 0 0.75rem; font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.2; }
+.hero__lead { max-width: 34rem; margin: 0 auto 1.5rem; color: #d6dce6; font-size: 1.05rem; }
+.hero .button--primary { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink); }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.feature {
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.feature h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+.feature p { margin: 0; color: var(--muted); }
+.feature--gold { border-top: 4px solid var(--gold); }
+.feature--silver { border-top: 4px solid var(--silver); }
+
+/* ---- Live prices panel: gold and silver side by side ---- */
+.market {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(15, 27, 45, 0.06);
+}
+.market__half + .market__half { border-left: 1px solid var(--border); }
+
+.market__header { padding: 0.75rem 1.25rem; }
+.market__header h2 { margin: 0; font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.market__half--gold .market__header { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: #3d2e05; }
+.market__half--silver .market__header { background: linear-gradient(135deg, var(--silver-light), var(--silver)); color: #1f2933; }
+
+.market__body { padding: 1.25rem; }
+
+.quote { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.75rem; margin: 0 0 0.75rem; }
+.quote__label { min-width: 2.5rem; color: var(--muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; }
+.price__value { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.quote--secondary .price__value { font-size: 1.35rem; font-weight: 700; }
+
+.change {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.change--up { color: var(--up); background: var(--up-bg); }
+.change--down { color: var(--down); background: var(--down-bg); }
+.change--flat { color: var(--muted); background: var(--silver-light); }
+
+.updated { margin-top: 0.75rem; text-align: center; font-size: 0.9rem; }
+
+/* ---- Manage prices page ---- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.cards .card { margin-bottom: 0; }
+.card h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+.card--gold { border-top: 4px solid var(--gold); }
+.card--silver { border-top: 4px solid var(--silver); }
+
+.entry-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 600; }
+.field input, .field select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+.errors { flex-basis: 100%; color: var(--down); }
+.errors ul { margin: 0; padding-left: 1.2rem; }
+
+.entry-list { margin: 0; padding-left: 1.25rem; }
+.entry-list li { padding: 0.3rem 0; font-variant-numeric: tabular-nums; }
+.entry-list li > * { vertical-align: middle; }
+.entry-list form { display: inline-block; margin-left: 0.5rem; }
+
+/* ---- Flash messages ---- */
+.flash { padding: 0.6rem 0.9rem; border-radius: 8px; font-weight: 600; }
+.flash--notice { background: var(--up-bg); color: var(--up); }
+.flash--alert { background: var(--down-bg); color: var(--down); }
+
+/* ---- Phones: stack the halves ---- */
+@media (max-width: 620px) {
+  .market__half + .market__half { border-left: 0; border-top: 1px solid var(--border); }
+  .price__value { font-size: 1.7rem; }
+}
