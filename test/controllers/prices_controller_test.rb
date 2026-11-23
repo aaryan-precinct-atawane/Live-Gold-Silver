@@ -1,36 +1,40 @@
 require "test_helper"
 
 class PricesControllerTest < ActionDispatch::IntegrationTest
-  test "shows an empty state before any ticks" do
+  test "shows a waiting state before the first live price" do
     get prices_path
     assert_response :success
-    assert_select "#card_gold", /No prices yet/
-    assert_select "#card_silver", /No prices yet/
+    assert_select "#card_gold", /Waiting for the first live price/
     assert_select ".updated", 0
   end
 
-  test "shows the latest price and the change since the previous tick" do
-    PriceQuote.create!(metal: "gold", price_inr: 76_500, price_usd: 2_650, recorded_at: 1.minute.ago)
-    PriceQuote.create!(metal: "gold", price_inr: 76_820, price_usd: 2_640, recorded_at: Time.current)
+  test "shows the latest price per ounce with Indian grouping and the change" do
+    create_quote(price_inr: 324_000, price_usd: 3_600, at: 20.seconds.ago)
+    create_quote(price_inr: 336_227.45, price_usd: 3_590, at: 10.seconds.ago, rate: 93.65)
 
     get prices_path
     assert_response :success
-    assert_select "#card_gold .price__value", "₹76,820.00"
-    assert_select "#card_gold .change--up", /▲ 320\.00/
+    assert_select "#card_gold .market__unit", "per troy ounce"
+    assert_select "#card_gold .price__value", "₹3,36,227.45"
+    assert_select "#card_gold .change--up", /▲ 12,227\.45/
     assert_select "#card_gold .change--down", /▼ 10\.00/
-    assert_select ".updated", /IST/
+    assert_select ".updated", /1 USD = ₹93\.6500/
+    assert_select ".flash--alert", 0
   end
 
-  test "no recent ticks table" do
-    PriceQuote.create!(metal: "gold", price_inr: 1, price_usd: 1, recorded_at: Time.current)
+  test "warns when prices are delayed" do
+    create_quote(at: 5.minutes.ago)
     get prices_path
-    assert_select "table", 0
+    assert_select ".flash--alert", /delayed/
   end
 
-  test "buy buttons under each metal lead back to the prices page" do
+  test "buy buttons open Binance gold and silver futures in a new tab" do
     get prices_path
-    assert_select "#card_gold a.button--buy[href=?]", prices_path, text: "Buy Gold"
-    assert_select "#card_silver a.button--buy[href=?]", prices_path, text: "Buy Silver"
+    assert_select "#card_gold a.button--buy[href=?][target=_blank][rel='noopener noreferrer']",
+                  "https://www.binance.com/en/futures/XAUUSDT", text: "Buy Gold on Binance ↗"
+    assert_select "#card_silver a.button--buy[href=?][target=_blank]",
+                  "https://www.binance.com/en/futures/XAGUSDT", text: "Buy Silver on Binance ↗"
+    assert_select "#card_gold .risk-note", /leveraged futures, high risk/
   end
 
   test "auto-refreshes with morphing" do

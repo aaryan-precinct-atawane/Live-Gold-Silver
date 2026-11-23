@@ -1,11 +1,11 @@
-# One published ticker price. The dashboard only reads from this table, so it
-# doesn't care whether quotes come from manual entries (today) or an API (later).
+# One published price for a metal, in USD and INR per troy ounce.
+# The ticker creates these from live Binance prices (see PriceTicker).
 class PriceQuote < ApplicationRecord
-  belongs_to :price_entry, optional: true
+  METALS = %w[gold silver].freeze
 
-  validates :metal, inclusion: { in: PriceEntry::METALS }
-  validates :price_inr, :price_usd, numericality: { greater_than: 0 }
-  validates :recorded_at, presence: true
+  validates :metal, inclusion: { in: METALS }
+  validates :price_inr, :price_usd, :usd_inr_rate, numericality: { greater_than: 0 }
+  validates :recorded_at, :source, presence: true
 
   scope :for_metal, ->(metal) { where(metal: metal) }
   scope :newest_first, -> { order(recorded_at: :desc, id: :desc) }

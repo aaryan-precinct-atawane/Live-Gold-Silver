@@ -15,7 +15,7 @@ production:
     schedule: every hour at minute 12
 
 development:
-  # Publish the next gold and silver price every 10 seconds.
+  # Fetch live gold and silver prices from Binance every 10 seconds.
   tick_prices:
     class: TickPricesJob
     schedule: every 10 seconds

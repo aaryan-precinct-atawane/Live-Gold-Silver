@@ -8,13 +8,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", prices_path, text: "View live prices"
   end
 
-  test "homepage has no link to manage prices" do
+  test "navigation has no Manage prices link" do
     get root_path
-    assert_select "a[href=?]", price_entries_path, 0
-  end
-
-  test "other pages still link to manage prices" do
-    get prices_path
-    assert_select "a[href=?]", price_entries_path, text: "Manage prices"
+    assert_select "nav a", text: "Manage prices", count: 0
   end
 end

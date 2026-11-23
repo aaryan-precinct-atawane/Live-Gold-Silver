@@ -1,34 +1,32 @@
 require "test_helper"
 
 class PriceQuoteTest < ActiveSupport::TestCase
-  def quote(metal:, price:, at:)
-    PriceQuote.create!(metal: metal, price_inr: price, price_usd: price, recorded_at: at)
+  test "requires metal, prices, rate, source and recorded_at" do
+    quote = PriceQuote.new
+    assert_not quote.valid?
+    %i[metal price_inr price_usd usd_inr_rate source recorded_at].each do |field|
+      assert quote.errors[field].any?, "expected an error on #{field}"
+    end
   end
 
-  test "requires metal, prices and recorded_at" do
-    q = PriceQuote.new
-    assert_not q.valid?
-    assert q.errors[:metal].any?
-    assert q.errors[:price_inr].any?
-    assert q.errors[:recorded_at].any?
-  end
-
-  test "price_entry is optional (for future API quotes)" do
-    assert PriceQuote.new(metal: "gold", price_inr: 1, price_usd: 1, recorded_at: Time.current).valid?
+  test "metal must be gold or silver" do
+    quote = PriceQuote.new(metal: "platinum")
+    assert_not quote.valid?
+    assert_includes quote.errors[:metal], "is not included in the list"
   end
 
   test "previous returns the earlier quote for the same metal only" do
-    first  = quote(metal: "gold",   price: 100, at: 3.minutes.ago)
-    quote(metal: "silver", price: 50, at: 2.minutes.ago)
-    latest = quote(metal: "gold",   price: 110, at: 1.minute.ago)
+    first  = create_quote(metal: "gold", at: 3.minutes.ago)
+    create_quote(metal: "silver", price_inr: 3_780, price_usd: 42, at: 2.minutes.ago)
+    latest = create_quote(metal: "gold", at: 1.minute.ago)
 
     assert_equal first, latest.previous
     assert_nil first.previous
   end
 
   test "newest_first orders by recorded_at" do
-    older = quote(metal: "gold", price: 100, at: 2.minutes.ago)
-    newer = quote(metal: "gold", price: 110, at: 1.minute.ago)
+    older = create_quote(at: 2.minutes.ago)
+    newer = create_quote(at: 1.minute.ago)
     assert_equal [ newer, older ], PriceQuote.newest_first.to_a
   end
 end

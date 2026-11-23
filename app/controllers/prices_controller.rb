@@ -1,9 +1,15 @@
-# The dashboard: the latest price for each metal.
+# The dashboard: the latest live price for each metal.
 class PricesController < ApplicationController
+  # If the newest price is older than this, the page says prices are delayed.
+  STALE_AFTER = 1.minute
+
   def index
-    @latest = PriceEntry::METALS.index_with do |metal|
+    @latest = PriceQuote::METALS.index_with do |metal|
       PriceQuote.for_metal(metal).newest_first.first
     end
-    @updated_at = @latest.values.compact.map(&:recorded_at).max
+    newest = @latest.values.compact.max_by(&:recorded_at)
+    @updated_at = newest&.recorded_at
+    @usd_inr_rate = newest&.usd_inr_rate
+    @stale = @updated_at.present? && @updated_at < STALE_AFTER.ago
   end
 end

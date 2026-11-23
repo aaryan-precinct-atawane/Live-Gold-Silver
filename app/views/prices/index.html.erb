@@ -5,12 +5,17 @@
 <div data-controller="auto-refresh" data-auto-refresh-interval-value="5000">
   <h1>Live Prices</h1>
 
+  <% if @stale %>
+    <p class="flash flash--alert">Live prices are delayed. Showing the last price received.</p>
+  <% end %>
+
   <div class="market">
-    <% PriceEntry::METALS.each do |metal| %>
+    <% PriceQuote::METALS.each do |metal| %>
       <% quote = @latest[metal] %>
       <section class="market__half market__half--<%= metal %>" id="card_<%= metal %>">
         <header class="market__header">
           <h2><%= metal.capitalize %></h2>
+          <span class="market__unit">per troy ounce</span>
         </header>
 
         <div class="market__body">
@@ -19,7 +24,7 @@
             <p class="quote">
               <span class="quote__label">INR</span>
               <span class="price__value"><%= inr(quote.price_inr) %></span>
-              <%= price_change(quote.price_inr, previous&.price_inr) %>
+              <%= price_change(quote.price_inr, previous&.price_inr, currency: :inr) %>
             </p>
             <p class="quote quote--secondary">
               <span class="quote__label">USD</span>
@@ -27,16 +32,23 @@
               <%= price_change(quote.price_usd, previous&.price_usd) %>
             </p>
           <% else %>
-            <p class="muted">No prices yet. <%= link_to "Add some", price_entries_path(metal: metal) %></p>
+            <p class="muted">Waiting for the first live price…</p>
           <% end %>
 
-          <%= link_to "Buy #{metal.capitalize}", prices_path, class: "button button--buy button--#{metal}" %>
+          <%= link_to "Buy #{metal.capitalize} on Binance ↗", BinancePriceSource.trade_url(metal),
+                class: "button button--buy button--#{metal}",
+                target: "_blank", rel: "noopener noreferrer" %>
+          <p class="risk-note">Opens Binance <%= BinancePriceSource::SYMBOLS[metal] %> · leveraged futures, high risk</p>
         </div>
       </section>
     <% end %>
   </div>
 
   <% if @updated_at %>
-    <p class="updated muted">Updated <%= @updated_at.strftime("%d %b %Y, %H:%M:%S") %> IST</p>
+    <p class="updated muted">
+      Updated <%= @updated_at.strftime("%d %b %Y, %H:%M:%S") %> IST
+      · Prices: Binance XAUUSDT / XAGUSDT
+      · 1 USD = <%= inr(@usd_inr_rate, precision: 4) %> (ECB via Frankfurter)
+    </p>
   <% end %>
 </div>
