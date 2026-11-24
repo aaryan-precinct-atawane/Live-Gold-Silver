@@ -6,6 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Gold Silver News">
     <meta name="mobile-web-app-capable" content="yes">
+    <%# The site is always dark: tells the browser to draw form controls and scrollbars dark too. %>
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0c0e">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -27,8 +30,9 @@
     <header class="site-header">
       <%= link_to "Gold & Silver News", root_path, class: "brand" %>
       <nav>
-        <%= link_to "Home", root_path %>
-        <%= link_to "Live prices", prices_path %>
+        <%# The current page's link is highlighted (aria-current also tells screen readers). %>
+        <%= link_to "Home", root_path, "aria-current": ("page" if current_page?(root_path)) %>
+        <%= link_to "Live prices", prices_path, "aria-current": ("page" if current_page?(prices_path)) %>
         <%# Shown on every page as a highlighted button. %>
         <%= link_to "▲▼ Binary Trading", trading_path,
               class: [ "button", "button--cta", { "button--cta-active": current_page?(trading_path) } ] %>
