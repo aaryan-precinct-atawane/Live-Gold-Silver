@@ -10,9 +10,38 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_23_130445) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_130001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "practice_accounts", force: :cascade do |t|
+    t.string "token", null: false
+    t.decimal "balance_inr", precision: 14, scale: 2, default: "1000000.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_practice_accounts_on_token", unique: true
+  end
+
+  create_table "practice_trades", force: :cascade do |t|
+    t.bigint "practice_account_id", null: false
+    t.string "metal", null: false
+    t.string "direction", null: false
+    t.decimal "stake_inr", precision: 14, scale: 2, null: false
+    t.integer "leverage", null: false
+    t.integer "duration_seconds", null: false
+    t.decimal "entry_price_usd", precision: 14, scale: 4, null: false
+    t.decimal "exit_price_usd", precision: 14, scale: 4
+    t.string "status", default: "open", null: false
+    t.string "close_reason"
+    t.decimal "pnl_inr", precision: 14, scale: 2
+    t.datetime "opened_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "closed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["practice_account_id", "status"], name: "index_practice_trades_on_practice_account_id_and_status"
+    t.index ["status", "expires_at"], name: "index_practice_trades_on_status_and_expires_at"
+  end
 
   create_table "price_quotes", force: :cascade do |t|
     t.string "metal", null: false
@@ -25,4 +54,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_130445) do
     t.string "source", null: false
     t.index ["metal", "recorded_at"], name: "index_price_quotes_on_metal_and_recorded_at"
   end
+
+  add_foreign_key "practice_trades", "practice_accounts", on_delete: :cascade
 end

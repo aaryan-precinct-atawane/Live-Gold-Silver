@@ -44,6 +44,14 @@
     <% end %>
   </div>
 
+  <div class="cta-strip">
+    <div>
+      <strong>Think gold or silver will move?</strong>
+      <span class="muted">Trade UP or DOWN on these live prices with ₹10,00,000 of practice money.</span>
+    </div>
+    <%= link_to "▲▼ Binary Trading", trading_path, class: "button button--cta" %>
+  </div>
+
   <% if @updated_at %>
     <p class="updated muted">
       Updated <%= @updated_at.strftime("%d %b %Y, %H:%M:%S") %> IST

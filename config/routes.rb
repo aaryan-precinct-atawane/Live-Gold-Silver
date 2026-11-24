@@ -8,4 +8,12 @@ Rails.application.routes.draw do
 
   # Dashboard with the live gold and silver ticker.
   get "prices" => "prices#index", as: :prices
+
+  # Practice (dummy money) trading desk.
+  get "trade" => "trading#show", as: :trading
+  get "trade/live" => "trading#live", as: :trading_live       # JSON, polled every second
+  post "trade/reset" => "trading#reset", as: :reset_trading
+  resources :practice_trades, only: :create, path: "trade/orders" do
+    post :close, on: :member                                   # POST /trade/orders/:id/close
+  end
 end
