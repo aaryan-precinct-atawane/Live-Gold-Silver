@@ -7,7 +7,10 @@
     Live gold and silver prices in rupees and US dollars,
     updating every few seconds like a broker's ticker.
   </p>
-  <%= link_to "View live prices", prices_path, class: "button button--primary button--large" %>
+  <div class="hero__actions">
+    <%= link_to "View live prices", prices_path, class: "button button--primary button--large" %>
+    <%= link_to "▲▼ Start Binary Trading", trading_path, class: "button button--outline button--large" %>
+  </div>
 </section>
 
 <section class="features">

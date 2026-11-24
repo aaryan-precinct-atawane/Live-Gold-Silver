@@ -29,6 +29,9 @@
       <nav>
         <%= link_to "Home", root_path %>
         <%= link_to "Live prices", prices_path %>
+        <%# Shown on every page as a highlighted button. %>
+        <%= link_to "▲▼ Binary Trading", trading_path,
+              class: [ "button", "button--cta", { "button--cta-active": current_page?(trading_path) } ] %>
       </nav>
     </header>
 

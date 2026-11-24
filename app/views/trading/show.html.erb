@@ -1,0 +1,187 @@
+<% content_for :title, "Binary Trading · Gold & Silver News" %>
+<%# After placing or closing a trade, only changed parts of the page are updated. %>
+<%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+
+<%
+  open_value = @open_trades.sum do |t|
+    price = @prices[t.metal]
+    price ? t.stake_inr + t.pnl_at(price) : t.stake_inr
+  end
+%>
+
+<div class="desk"
+     data-controller="trade-desk"
+     data-trade-desk-live-url-value="<%= trading_live_path(format: :json) %>"
+     data-trade-desk-history-value="<%= @chart_history.to_json %>">
+
+  <div class="desk__top">
+    <div>
+      <h1>Binary Trading</h1>
+      <p class="muted desk__subtitle">Dummy money only · live Binance prices · nothing here is real</p>
+    </div>
+    <div class="account-bar">
+      <div>
+        <span class="account-bar__label">Balance</span>
+        <strong data-trade-desk-target="balance"><%= inr(@account.balance_inr) %></strong>
+      </div>
+      <div>
+        <span class="account-bar__label">Equity</span>
+        <strong data-trade-desk-target="equity"><%= inr(@account.balance_inr + open_value) %></strong>
+      </div>
+      <%= button_to "Reset", reset_trading_path, class: "button button--small",
+            form: { data: { turbo_confirm: "Close all trades and reset the balance to ₹10,00,000?" } } %>
+    </div>
+  </div>
+
+  <p class="desk__status" data-trade-desk-target="status">Connecting to Binance…</p>
+
+  <%# ---- Live price tiles ---- %>
+  <div class="tiles">
+    <% PriceQuote::METALS.each do |metal| %>
+      <% price = @prices[metal] %>
+      <div class="tile tile--<%= metal %>">
+        <span class="tile__name"><%= metal.capitalize %></span>
+        <span class="tile__price" data-trade-desk-target="priceUsd" data-metal="<%= metal %>">
+          <%= price ? usd(price) : "—" %>
+        </span>
+        <span class="tile__inr muted" data-trade-desk-target="priceInr" data-metal="<%= metal %>">
+          <%= price && @usd_inr_rate ? inr(price * @usd_inr_rate) : "" %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="desk__grid">
+    <%# ---- Chart (kept across page updates so its live history isn't lost) ---- %>
+    <section class="panel chart" id="trade_chart" data-turbo-permanent>
+      <header class="panel__header">
+        <h2 data-trade-desk-target="chartTitle">Gold · last 5 minutes</h2>
+        <span class="muted chart__legend">dashed lines = your entry prices</span>
+      </header>
+      <svg class="chart__svg" viewBox="0 0 600 240"
+           data-trade-desk-target="chart" role="img" aria-label="Live price chart"></svg>
+    </section>
+
+    <%# ---- Order form ---- %>
+    <section class="panel order">
+      <header class="panel__header"><h2>New trade</h2></header>
+      <%= form_with scope: :practice_trade, url: practice_trades_path, class: "order__form" do |f| %>
+        <fieldset class="seg">
+          <legend>Metal</legend>
+          <% PriceQuote::METALS.each do |metal| %>
+            <label>
+              <%= f.radio_button :metal, metal, checked: @form["metal"] == metal,
+                    data: { trade_desk_target: "metalInput", action: "change->trade-desk#drawChart" } %>
+              <span><%= metal.capitalize %></span>
+            </label>
+          <% end %>
+        </fieldset>
+
+        <label class="field">
+          Stake (₹)
+          <%= f.number_field :stake_inr, value: @form["stake_inr"], min: PracticeTrade::MIN_STAKE_INR,
+                step: 1, required: true, inputmode: "numeric" %>
+        </label>
+
+        <fieldset class="seg">
+          <legend>Leverage</legend>
+          <% PracticeTrade::LEVERAGES.each do |lev| %>
+            <label>
+              <%= f.radio_button :leverage, lev, checked: @form["leverage"].to_i == lev %>
+              <span><%= lev %>×</span>
+            </label>
+          <% end %>
+        </fieldset>
+
+        <fieldset class="seg">
+          <legend>Expiry</legend>
+          <% PracticeTrade::DURATIONS.each do |seconds, label| %>
+            <label>
+              <%= f.radio_button :duration_seconds, seconds, checked: @form["duration_seconds"].to_i == seconds %>
+              <span><%= label %></span>
+            </label>
+          <% end %>
+        </fieldset>
+
+        <div class="order__buttons">
+          <%= f.button "▲ UP", name: "practice_trade[direction]", value: "up", class: "button button--up" %>
+          <%= f.button "▼ DOWN", name: "practice_trade[direction]", value: "down", class: "button button--down" %>
+        </div>
+        <p class="order__note muted">
+          P&amp;L = stake × leverage × % price move. You can never lose more than your stake;
+          the trade is stopped out if the loss reaches it.
+        </p>
+      <% end %>
+    </section>
+  </div>
+
+  <%# ---- Open trades with live P&L ---- %>
+  <section class="panel">
+    <header class="panel__header"><h2>Open trades</h2></header>
+    <% if @open_trades.empty? %>
+      <p class="muted panel__empty">No open trades. Pick UP or DOWN above to open one.</p>
+    <% else %>
+      <div class="trades">
+        <% @open_trades.each do |trade| %>
+          <% price = @prices[trade.metal] %>
+          <% pnl = price && trade.pnl_at(price) %>
+          <article class="trade trade--<%= trade.direction %>" id="trade_<%= trade.id %>"
+                   data-trade-desk-target="trade"
+                   data-trade-id="<%= trade.id %>"
+                   data-metal="<%= trade.metal %>"
+                   data-entry="<%= trade.entry_price_usd.to_f %>"
+                   data-stake="<%= trade.stake_inr.to_f %>"
+                   data-opened-at="<%= js_time(trade.opened_at) %>"
+                   data-expires-at="<%= js_time(trade.expires_at) %>">
+            <div class="trade__head">
+              <strong><%= trade.metal.capitalize %> <%= trade.direction == "up" ? "▲ UP" : "▼ DOWN" %></strong>
+              <span class="trade__tag"><%= trade.leverage %>×</span>
+              <span class="muted">stake <%= inr(trade.stake_inr) %></span>
+            </div>
+
+            <dl class="trade__nums">
+              <div><dt>Entry</dt><dd><%= usd(trade.entry_price_usd) %></dd></div>
+              <div><dt>Now</dt><dd data-role="price"><%= price ? usd(price) : "—" %></dd></div>
+              <div><dt>P&amp;L</dt><dd><span data-role="pnl" class="<%= pnl_class(pnl) %>"><%= pnl ? signed_inr(pnl) : "—" %></span></dd></div>
+              <div><dt>Value</dt><dd data-role="multiple" class="trade__multiple"><%= price ? multiple(trade.value_multiple_at(price)) : "—" %></dd></div>
+            </dl>
+
+            <div class="trade__foot">
+              <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
+              <span class="trade__countdown" data-role="countdown">…</span>
+              <%= button_to "Close now", close_practice_trade_path(trade), class: "button button--small" %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ---- History ---- %>
+  <section class="panel">
+    <header class="panel__header"><h2>Recent closed trades</h2></header>
+    <% if @closed_trades.empty? %>
+      <p class="muted panel__empty">Closed trades will appear here.</p>
+    <% else %>
+      <div class="table-wrap">
+        <table class="history">
+          <thead>
+            <tr><th>Closed</th><th>Trade</th><th>Stake</th><th>Entry → Exit</th><th>Result</th><th>P&amp;L</th></tr>
+          </thead>
+          <tbody>
+            <% @closed_trades.each do |trade| %>
+              <tr>
+                <td><%= trade.closed_at.strftime("%H:%M:%S") %></td>
+                <td><%= trade.metal.capitalize %> <%= trade.direction.upcase %> <%= trade.leverage %>×</td>
+                <td><%= inr(trade.stake_inr) %></td>
+                <td><%= usd(trade.entry_price_usd) %> → <%= usd(trade.exit_price_usd) %></td>
+                <td><%= close_reason_label(trade.close_reason) %></td>
+                <td><span class="<%= pnl_class(trade.pnl_inr) %>"><%= signed_inr(trade.pnl_inr) %></span></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>
